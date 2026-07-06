@@ -99,7 +99,7 @@ final class PersistenceController {
 
     func loadMessages(sessionId: String) -> [ChatMessage] {
         let descriptor = FetchDescriptor<ChatMessageRecord>(
-            predicate: #Predicate { $0.sessionId == sessionId },
+            predicate: #Predicate<ChatMessageRecord> { $0.sessionId == sessionId },
             sortBy: [SortDescriptor(\.createdAt, order: .forward)]
         )
         let records = (try? context.fetch(descriptor)) ?? []
