@@ -83,11 +83,12 @@ final class CommandExecutor {
     }
 
     /// Pure approval decision (no side effects, no dependencies) — exercised directly by tests.
+    /// `nonisolated` so it can be called off the main actor (the enclosing type is `@MainActor`).
     /// Irreversible actions are never auto-approved, even when `autoApproveHigh` is on.
-    static func requiresApproval(action: CommandAction,
-                                 level: RiskLevel,
-                                 autoApproveMedium: Bool,
-                                 autoApproveHigh: Bool) -> Bool {
+    nonisolated static func requiresApproval(action: CommandAction,
+                                             level: RiskLevel,
+                                             autoApproveMedium: Bool,
+                                             autoApproveHigh: Bool) -> Bool {
         switch level {
         case .low: return false
         case .medium: return !autoApproveMedium
