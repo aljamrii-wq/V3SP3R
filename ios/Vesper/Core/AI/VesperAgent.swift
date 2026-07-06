@@ -72,6 +72,25 @@ final class VesperAgent {
         error = nil
     }
 
+    /// Restore the most recent conversation on launch. Tool turns are shown but not replayed into
+    /// the model context (persisted messages don't carry tool-call structure), so the model
+    /// continues from the user/assistant text turns.
+    func restoreLastSession() {
+        guard let persistence, let last = persistence.latestSessionId() else { return }
+        let restored = persistence.loadMessages(sessionId: last)
+        guard !restored.isEmpty else { return }
+        sessionId = last
+        messages = restored // assigned directly (not via append) so it isn't re-persisted
+        apiMessages = [.system(VesperPrompts.system)]
+        for message in restored {
+            switch message.role {
+            case .user: apiMessages.append(.user(message.content))
+            case .assistant: apiMessages.append(.assistant(message.content))
+            case .tool, .system: break
+            }
+        }
+    }
+
     func approvePending() {
         approvalContinuation?.resume(returning: true)
         approvalContinuation = nil

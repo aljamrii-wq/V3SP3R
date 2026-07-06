@@ -97,6 +97,32 @@ final class PersistenceController {
         try? context.save()
     }
 
+    /// Most recent audit entries, newest first — used to hydrate the Audit tab on launch.
+    func loadRecentAudit(limit: Int = 200) -> [AuditEntry] {
+        var descriptor = FetchDescriptor<AuditRecord>(sortBy: [SortDescriptor(\.timestamp, order: .reverse)])
+        descriptor.fetchLimit = limit
+        let records = (try? context.fetch(descriptor)) ?? []
+        return records.map { record in
+            let metadata = record.metadataJSON.data(using: .utf8)
+                .flatMap { try? JSONDecoder().decode([String: String].self, from: $0) } ?? [:]
+            return AuditEntry(id: record.id,
+                              timestamp: record.timestamp,
+                              actionType: AuditActionType(rawValue: record.actionTypeRaw) ?? .error,
+                              sessionId: record.sessionId,
+                              summary: record.summary,
+                              riskLevel: record.riskRaw.flatMap { RiskLevel(rawValue: $0) },
+                              success: record.success,
+                              metadata: metadata)
+        }
+    }
+
+    /// The session id of the most recently stored chat message (for restoring the last conversation).
+    func latestSessionId() -> String? {
+        var descriptor = FetchDescriptor<ChatMessageRecord>(sortBy: [SortDescriptor(\.createdAt, order: .reverse)])
+        descriptor.fetchLimit = 1
+        return (try? context.fetch(descriptor))?.first?.sessionId
+    }
+
     func loadMessages(sessionId: String) -> [ChatMessage] {
         let descriptor = FetchDescriptor<ChatMessageRecord>(
             predicate: #Predicate<ChatMessageRecord> { $0.sessionId == sessionId },

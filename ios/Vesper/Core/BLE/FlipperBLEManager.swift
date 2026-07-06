@@ -118,15 +118,28 @@ final class FlipperBLEManager: NSObject {
 
     /// Send raw bytes to the Flipper, chunked to the negotiated MTU. Serialized by the caller
     /// (`FlipperProtocol`), so at most one write is outstanding.
+    ///
+    /// The write type follows the characteristic's advertised properties: `.withResponse` when the
+    /// characteristic supports it (we can await the write ack), otherwise `.withoutResponse` (no ack
+    /// is delivered, so we pace with a short delay for flow control). Some Flipper firmwares expose a
+    /// write-without-response-only serial characteristic, where always using `.withResponse` would
+    /// fail and awaiting an ack would hang.
     func send(_ data: Data) async throws {
         guard let peripheral, let tx = txCharacteristic else { throw FlipperError.notConnected }
-        let mtu = peripheral.maximumWriteValueLength(for: .withResponse)
+        let useResponse = tx.properties.contains(.write)
+        let writeType: CBCharacteristicWriteType = useResponse ? .withResponse : .withoutResponse
+        let mtu = peripheral.maximumWriteValueLength(for: writeType)
         let chunkSize = max(20, mtu)
         var offset = 0
         while offset < data.count {
             let end = min(offset + chunkSize, data.count)
             let chunk = data.subdata(in: offset..<end)
-            try await writeChunk(chunk, to: tx, on: peripheral)
+            if useResponse {
+                try await writeChunk(chunk, to: tx, on: peripheral)
+            } else {
+                peripheral.writeValue(chunk, for: tx, type: .withoutResponse)
+                try await Task.sleep(for: .milliseconds(12)) // pace no-response writes
+            }
             offset = end
         }
     }

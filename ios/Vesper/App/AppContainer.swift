@@ -43,6 +43,10 @@ final class AppContainer {
             self?.persistence.persist(entry)
         }
 
+        // Restore persisted history on launch.
+        audit.hydrate(persistence.loadRecentAudit())
+        agent.restoreLastSession()
+
         // Begin consuming inbound BLE bytes.
         let proto = self.proto
         Task { await proto.start() }

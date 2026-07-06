@@ -13,6 +13,11 @@ final class AuditService {
     /// Persistence hook (set by the app container to a SwiftData-backed writer).
     @ObservationIgnored var sink: (@MainActor (AuditEntry) -> Void)?
 
+    /// Replace the in-memory window with persisted entries (newest first) on launch.
+    func hydrate(_ entries: [AuditEntry]) {
+        recentEntries = Array(entries.prefix(maxInMemory))
+    }
+
     func log(_ entry: AuditEntry) {
         recentEntries.insert(entry, at: 0)
         if recentEntries.count > maxInMemory {
