@@ -140,7 +140,7 @@ actor FlipperProtocol {
             commandInFlight = true
             return
         }
-        await withCheckedContinuation { (cont: CheckedContinuation<Void, Void>) in
+        await withCheckedContinuation { (cont: CheckedContinuation<Void, Never>) in
             waiters.append(cont)
         }
     }
