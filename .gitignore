@@ -35,3 +35,9 @@ mentra-bridge/.env
 *.log
 crash-reports/
 out/
+
+# RepoWise (local codebase-intelligence cache/config — machine-specific, not project config)
+.repowise/
+/.mcp.json
+.vscode/
+.claude/
