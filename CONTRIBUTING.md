@@ -14,44 +14,67 @@ Thanks for your interest in contributing! Vesper is an open-source project and w
    ```bash
    git checkout -b feature/your-feature-name
    ```
-4. **Open in Android Studio** and let Gradle sync
+4. **Generate and open the Xcode project** (see below)
 5. **Build and test** your changes
 
 ### Requirements
 
-- Android Studio (latest stable recommended)
-- JDK 17+
-- Android SDK with API 26+ (Android 8.0)
+- macOS with **Xcode 15+**
+- **iOS 17+** deployment target
+- [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`)
 - A Flipper Zero device (for testing hardware features)
+
+### Generate the project
+
+The `.xcodeproj` is generated from `ios/project.yml` (and git-ignored):
+
+```bash
+brew install xcodegen
+cd ios
+xcodegen generate
+open Vesper.xcodeproj
+```
+
+Run the tests from the command line with:
+
+```bash
+cd ios
+xcodegen generate
+xcodebuild -project Vesper.xcodeproj -scheme Vesper \
+  -destination 'platform=iOS Simulator,name=iPhone 15' \
+  build test CODE_SIGNING_ALLOWED=NO
+```
 
 ## Development Guidelines
 
 ### Code Style
 
-- Follow standard [Kotlin coding conventions](https://kotlinlang.org/docs/coding-conventions.html)
-- Use meaningful variable and function names
-- Keep functions focused — one function, one responsibility
-- Use Jetpack Compose best practices for UI code
+- Follow the [Swift API Design Guidelines](https://www.swift.org/documentation/api-design-guidelines/)
+- Use meaningful names; keep functions focused — one function, one responsibility
+- Prefer value types (`struct`/`enum`) for models; `actor`/`@MainActor` for shared mutable state
+- Follow SwiftUI best practices; use `@Observable` for view state
 
 ### Architecture
 
-Vesper follows a layered architecture:
+Vesper follows a layered architecture (see [docs/architecture.md](docs/architecture.md)):
 
-- **UI Layer** — Jetpack Compose screens + ViewModels (in `ui/`)
-- **Domain Layer** — Business logic, command execution, risk assessment (in `domain/`)
-- **Data Layer** — Persistence, API clients, BLE communication (in `data/`, `ai/`, `ble/`)
+- **Presentation** — SwiftUI screens + `@Observable` state (in `ios/Vesper/Features/`)
+- **Agent/AI** — `VesperAgent`, `OpenRouterClient` (in `ios/Vesper/Core/AI/`)
+- **Domain** — command execution, risk assessment, services (in `ios/Vesper/Core/Domain/`)
+- **Transport/Data** — BLE, persistence, settings (in `ios/Vesper/Core/BLE/`, `Core/Data/`)
 
-When adding features, place code in the appropriate layer. If unsure, look at how existing features are structured.
+When adding features, place code in the appropriate layer.
 
 ### Security
 
 Security is a core concern for Vesper. Please:
 
-- **Never** commit API keys, secrets, or credentials
+- **Never** commit API keys, secrets, or credentials (the API key belongs in the Keychain)
 - **Always** validate and sanitize external input (LLM responses, BLE data, user input)
-- **Respect** the risk classification system — new actions must have appropriate risk levels
-- **Test** edge cases, especially around JSON parsing and BLE communication
-- Run inputs through the existing `InputValidator` and `InputSanitizer` utilities
+- **Respect** the risk classification system — new actions must get an appropriate `RiskLevel`
+- **Never** interpolate unvalidated strings into a CLI command — reject control characters and
+  validate paths (`FlipperFileSystem.validate`)
+- **Test** edge cases, especially around JSON parsing and command classification
 
 ### Commit Messages
 
@@ -73,13 +96,14 @@ out-of-range values.
 
 ### Areas That Need Help
 
-- **iOS version** — SwiftUI port of the Android app
+- **Feature-parity screens** — Alchemy Lab, Payload Lab, Signal Arsenal, Spectral Oracle, FapHub
+- **Protobuf RPC** — a `swift-protobuf` path alongside the CLI transport (GUI/screenshot/app-bridge)
+- **Hardware actions** — SubGHz/IR/NFC/RFID/iButton transmit & emulate, BadUSB
+- **Multimodal** — voice (Speech framework) and camera/vision input
 - **Signal format parsers** — Support for new RF/IR protocols
-- **Payload templates** — BadUSB scripts, SubGHz signals, IR remotes, NFC tags
 - **UI/UX improvements** — Animations, accessibility, responsive layouts
-- **Translations / i18n** — Localization for non-English languages
-- **Test coverage** — Unit tests, integration tests, UI tests
-- **Documentation** — Guides, tutorials, API docs
+- **Test coverage** — Unit tests, XCUITest UI tests
+- **Documentation** — Guides, tutorials
 
 ### Good First Issues
 
@@ -108,7 +132,7 @@ Use the [Bug Report](../../issues/new?template=bug_report.md) issue template. In
 
 - Steps to reproduce
 - Expected vs actual behavior
-- Device info (Android version, Flipper firmware version)
+- Device info (iOS version, iPhone model, Flipper firmware version)
 - Logs or screenshots if available
 
 ## Requesting Features

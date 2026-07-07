@@ -1,59 +1,43 @@
-*.iml
-.gradle
-/local.properties
-local.properties
-/.idea
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
-/app/build
-
-# Signing keys — NEVER commit these
-*.jks
-*.keystore
-keystore/
-
-# Generated files
-*.apk
-*.aab
-*.ap_
-*.dex
-
-# Log files
-*.log
-
-# Android Studio navigation editor temp files
-.navigation/
-
-# Android Studio captures folder
-captures/
-
-# IntelliJ
-*.iws
-.idea/
-out/
-
-# Kotlin
-*.class
-
-# OS files
+# macOS
 .DS_Store
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+
+# Xcode / iOS
+ios/*.xcodeproj/
+ios/*.xcworkspace/
+ios/DerivedData/
+ios/build/
+ios/TestResults*
+*.xcuserstate
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+.swiftpm/
+Package.resolved
+
+# Secrets / signing — NEVER commit these
+*.mobileprovision
+*.p12
+*.cer
+secrets/
+.env
+.env.local
+*.env
 
 # Node (mentra-bridge)
 mentra-bridge/node_modules/
 mentra-bridge/dist/
 mentra-bridge/.env
 
-# Environment / secrets
-.env
-.env.local
-*.env
-secrets/
-
-# Crash logs
+# Logs / misc
+*.log
 crash-reports/
+out/
+
+# RepoWise (local codebase-intelligence cache/config — machine-specific, not project config)
+.repowise/
+/.mcp.json
+.vscode/
+.claude/
